@@ -1,0 +1,20 @@
+package Saetta_Server;
+
+message Server_Info {
+  required string time = 1;
+  required string address = 2;
+
+  message Client {
+    required string name = 1;
+    required string address = 2;
+    optional string status = 3;
+  }
+
+  repeated Client known_clients = 3;
+}
+
+message Ping {
+  required int32 id = 1;
+  repeated string timestamp = 2;
+  repeated uint64 itimestamp = 3;
+}
