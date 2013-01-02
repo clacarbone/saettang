@@ -1,0 +1,35 @@
+WELCOME
+=======
+
+Part of the SAETTA project.
+(read a bit about saetta here http://www.dia.uniroma3.it/~dirocco/saetta.html )
+
+BACKGROUND
+==========
+
+SaettaNG is intended to give the Saetta platform some new spice.
+Given the fact that the platform is branching into two very different variations, and that the
+ultimate objective is run the experiment under ROS, some heavy modifications are needed.
+This project attempts to solve most of the problems in this regard.
+
+
+CURRENT STATUS
+==============
+
+The project actually builds, but does nothing useful.
+The current state is that a client can receive a server's updates in a decentralized manner
+and without any previous knowledge of IPs or network layout.
+Server and client cannot operate on the same machine (due to how the MULTICAST implementation
+works).
+Both programs default to connect through eth0, but using the flag -i iface it's possible to
+have them use another interface.
+It's been tested both on ethernet and wifi networks and so far this part seems pretty solid.
+
+
+CAVEATS
+=======
+
+
+IMPLEMENTATION NOTES
+====================
+
