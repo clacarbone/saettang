@@ -69,11 +69,11 @@ int main(int argc, char** argv) {
     outstream = stdout;
     arguments.M_DEBUG=&MAIN_DEBUG;
     arguments.Z_DEBUG=&ZMQ_DEBUG;
-    arguments.interf="eth0";
+    strcpy( arguments.interf, "eth0" );;
     arguments.outfile = NULL;
     s_catch_signals();
 
-    int arg_parse_res = argp_parse(&argp, argc, argv, 0, 0, &arguments);
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
     if (arguments.outfile)
         outstream = fopen (arguments.outfile, "w");

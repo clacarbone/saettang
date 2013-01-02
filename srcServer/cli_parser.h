@@ -54,9 +54,9 @@ static struct argp_option options[] =
    Order of parameters: KEY, ARG, STATE.
 */
 static error_t
-parse_opt (char key, char *arg, struct argp_state *state)
+parse_opt (int key, char *arg, struct argp_state *state)
 {
-  struct arguments *arguments = state->input;
+  struct arguments *arguments = (struct arguments*)state->input;
 
   switch (key)
   {

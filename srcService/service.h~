@@ -45,7 +45,7 @@ extern "C" {
 #include <stdio.h>
 #include <unistd.h>
 
-
+FILE *outstream;
 //#include <fcntl.h>>
 #include <stdarg.h>
 struct timeval plm_tv;

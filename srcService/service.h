@@ -60,7 +60,7 @@ int ZMQ_DEBUG;
 
 #define DEF_SECOND 1000000
 
-static void dbg_print(char* proc_name, const char *format,...)
+static void dbg_print(const char* proc_name, const char *format,...)
 {
     PROC_STR(proc_name);
     va_list argptr;
