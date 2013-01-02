@@ -28,12 +28,6 @@ It's been tested both on ethernet and wifi networks and so far this part seems
 pretty solid.
 
 
-HOWS TO
-=======
-
-BUILD -> "mkdir build && cd build && cmake .. && make"
-
-
 CAVEATS
 =======
 
