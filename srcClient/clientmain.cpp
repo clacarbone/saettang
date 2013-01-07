@@ -8,6 +8,7 @@
 #include <service.h>
 #include <saetta.pb.h>
 #include "cli_parser.h"
+#define memyselfandi 1
 #define MULTICAST_ADDRESS "239.192.1.1"
 #define MULTICAST_PORT 5678
 using namespace std;
