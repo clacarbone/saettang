@@ -279,12 +279,12 @@ namespace Zmqcpp {
         this->_socket = new Zmqcpp::Socket(this->_zmq_context,ZMQ_REP);            
     }
     
-    Reply::Reply(Context* context, std::string ip_str, int conn)
+    Reply::Reply(Context* context, char* ip_str, int conn)
     {
         this->_socket=0;
         this->_zmq_context=0;
         this->_zmq_context=context;
-        this->_socket = new Zmqcpp::Socket(this->_zmq_context,ZMQ_REP, ip_str.c_str(), conn);            
+        this->_socket = new Zmqcpp::Socket(this->_zmq_context,ZMQ_REP, ip_str, conn);            
     }
     
     Reply::~Reply()
@@ -320,12 +320,12 @@ namespace Zmqcpp {
         this->_socket = new Zmqcpp::Socket(this->_zmq_context,ZMQ_REP);            
     }
     
-    Router::Router(Context* context, std::string ip_str, int conn)
+    Router::Router(Context* context, char* ip_str, int conn)
     {
         this->_socket=0;
         this->_zmq_context=0;
         this->_zmq_context=context;
-        this->_socket = new Zmqcpp::Socket(this->_zmq_context,ZMQ_REP, ip_str.c_str(), conn);            
+        this->_socket = new Zmqcpp::Socket(this->_zmq_context,ZMQ_REP, ip_str, conn);            
     }
     
     Router::~Router()

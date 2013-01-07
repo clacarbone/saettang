@@ -108,7 +108,7 @@ namespace Zmqcpp
     {
         public:
             Reply(Context* context);
-            Reply(Context* context, std::string ip_str, int conn);
+            Reply(Context* context, char* ip_str, int conn);
             virtual ~Reply();
             void SendMsg(int count, ...);
             std::string RecvMsg();            
@@ -118,7 +118,7 @@ namespace Zmqcpp
     {
         public:
             Router(Context* context);
-            Router(Context* context, std::string ip_str, int conn);
+            Router(Context* context, char* ip_str, int conn);
             virtual ~Router();
             void SendMsg(int count, ...);
             std::string RecvMsg();            
