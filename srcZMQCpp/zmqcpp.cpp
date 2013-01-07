@@ -171,7 +171,9 @@ namespace Zmqcpp {
     }
     int generic::setIdentityRnd(void)
     {
-        s_set_id (this->_socket);
+        char identity [10];
+        sprintf (identity, "%04X-%04X", randof (0x10000), randof (0x10000));
+        return zmq_setsockopt (this->_socket, ZMQ_IDENTITY, identity, strlen (identity));
     }
 
     
