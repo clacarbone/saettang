@@ -60,10 +60,10 @@ namespace Zmqcpp
     class generic
     {
         public:
-            /*int Bind();
-            int Bind(std::string ip_addr);
-            int Connect();
-            int Connect(std::string ip_addr);*/
+            int getSocketOption (void *socket, int option_name, void *option_value, size_t *option_len);
+            int setSocketOption(int option, const void *optval,size_t optvallen);
+            int setIdentity(std::string ident);
+            int setIdentityRnd(void);
         protected:
             Zmqcpp::Context* _zmq_context;
             Zmqcpp::Socket* _socket;

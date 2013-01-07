@@ -63,6 +63,7 @@ namespace Zmqcpp {
         this->_zmq_socket_ptr = zmq_socket(context->_zmq_context_ptr, skt_type);    
         if (this->_zmq_socket_ptr == NULL)
             throw error_t ();
+        s_set_id (this->_zmq_socket_ptr);
     }
     
     Socket::Socket(Context* context, int skt_type, std::string ip_addr, int conn)
@@ -80,6 +81,7 @@ namespace Zmqcpp {
             else
                 throw error_t();
         }
+        s_set_id (this->_zmq_socket_ptr);
     }
     
     Socket::~Socket()
@@ -153,6 +155,23 @@ namespace Zmqcpp {
             throw error_t ();      
         this->_ip_addr = ip_addr;
         return 0;
+    }
+    
+    int generic::getSocketOption (void *socket, int option_name, void *option_value, size_t *option_len)
+    {
+        return zmq_getsockopt(this->_socket, option_name, option_value, option_len);
+    }
+    int generic::setSocketOption(int option, const void *optval,size_t optvallen)
+    {
+        return zmq_setsockopt(this->_socket,option, optval, optvallen);
+    }
+    int generic::setIdentity(std::string ident)
+    {
+        return zmq_setsockopt (this->_socket, ZMQ_IDENTITY, ident.c_str(), ident.length());
+    }
+    int generic::setIdentityRnd(void)
+    {
+        s_set_id (this->_socket);
     }
 
     

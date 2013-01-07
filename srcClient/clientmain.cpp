@@ -72,10 +72,10 @@ int main(int argc, char** argv) {
 
     argp_parse(&argp, argc, argv, ARGP_NO_ERRS, 0, &arguments);
 
-    if (arguments.outfile)
+    if (strlen(arguments.outfile)>0)
         outstream = fopen (arguments.outfile, "w");
 
-    printf("Requested interface %s, attempting to fetch address...\n",arguments.interf);
+    fprintf(outstream, "Requested interface %s, attempting to fetch address...\n",arguments.interf);
     if (!get_iface_address(arguments.interf))
         return (EXIT_FAILURE);
     ss << "epgm://" << _local_ip_address << ";" << MULTICAST_ADDRESS << ":" << MULTICAST_PORT << std::endl;
