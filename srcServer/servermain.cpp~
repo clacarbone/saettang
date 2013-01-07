@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     arguments.outfile = NULL;
     s_catch_signals();
 
-    int arg_parse_res = argp_parse(&argp, argc, argv, 0, 0, &arguments);
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
     if (arguments.outfile)
         outstream = fopen (arguments.outfile, "w");

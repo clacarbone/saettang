@@ -29,8 +29,8 @@ const char *argp_program_bug_address = CONTACT_EMAIL;
 struct arguments
 {
   int *Z_DEBUG, *M_DEBUG;
-  char * interf;
-  char *outfile;            /* Argument for -o */
+  char interf[20];
+  char outfile[255]; 
 };
 
 /*
@@ -67,10 +67,10 @@ parse_opt (int key, char *arg, struct argp_state *state)
         *(arguments->M_DEBUG) = atoi(arg);
         break;               
     case 'o':
-        arguments->outfile = arg;
+        strcpy(arguments->outfile,arg);
         break;
     case 'i':
-        arguments->interf = arg;
+        strcpy(arguments->interf,arg);
         break;
         
     case ARGP_KEY_ARG:

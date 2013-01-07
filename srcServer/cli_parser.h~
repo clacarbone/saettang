@@ -29,8 +29,8 @@ const char *argp_program_bug_address = CONTACT_EMAIL;
 struct arguments
 {
   int *Z_DEBUG, *M_DEBUG;
-  char * interf;
-  char *outfile;            /* Argument for -o */
+  char interf[20];
+  char outfile[255]; 
 };
 
 /*
@@ -56,7 +56,7 @@ static struct argp_option options[] =
 static error_t
 parse_opt (int key, char *arg, struct argp_state *state)
 {
-  struct arguments *arguments = state->input;
+  struct arguments *arguments = (struct arguments*)state->input;
 
   switch (key)
   {

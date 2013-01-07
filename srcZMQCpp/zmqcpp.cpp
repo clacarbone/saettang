@@ -155,28 +155,6 @@ namespace Zmqcpp {
         return 0;
     }
 
-/*    
-    int generic::Bind()
-    {
-        return zmq_bind(this->_socket,"tcp://*:5678");
-    }
-    
-    int generic::Bind(std::string ip_addr)
-    {
-        return zmq_bind(this->_socket,"epgm://192.168.127.253;239.192.1.1:5678");
-    }
-    
-    int generic::Connect()
-    {
-        return zmq_connect(this->_socket,"tcp://*:5678");
-    }
-    
-    int generic::Connect(std::string ip_addr)
-    {
-        return zmq_connect(this->_socket,"epgm://192.168.127.253;239.192.1.1:5678");
-    }
- */
-
     
     Publisher::Publisher(Context* context)
     {

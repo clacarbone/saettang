@@ -67,10 +67,10 @@ int main(int argc, char** argv) {
     arguments.M_DEBUG=&MAIN_DEBUG;
     arguments.Z_DEBUG=&ZMQ_DEBUG;
     strcpy( arguments.interf, "eth0" );
-    arguments.outfile = NULL;
+    strcpy( arguments.outfile, "");
     s_catch_signals();
 
-    argp_parse(&argp, argc, argv, 0, 0, &arguments);
+    argp_parse(&argp, argc, argv, ARGP_NO_ERRS, 0, &arguments);
 
     if (arguments.outfile)
         outstream = fopen (arguments.outfile, "w");
