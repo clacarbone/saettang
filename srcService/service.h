@@ -7,6 +7,7 @@
 
 #ifndef SERVICE_H
 #define	SERVICE_H
+#include <pthread.h>
 #include <cstdlib>
 #include <zmqcpp.h>
 #include <net/if.h>
