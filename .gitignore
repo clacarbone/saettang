@@ -1,0 +1,10 @@
+/srcZMQCpp/Saetta ZMQ Library/
+/srcClient/Saetta Client/
+/srcProtoBuf/Saetta Msg Library/
+/srcProtoBuf/saetta.pb.cc
+/srcProtobuf/saetta.pb.h
+/srcServer/Saetta Server/
+`find . -name "*pb*"`
+`find . -name "*.dep*"`
+`find . -name "*~*"`
+
