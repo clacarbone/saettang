@@ -77,7 +77,10 @@ namespace Zmqcpp {
         else
         {
             if (conn == ZMQCPP_CONNECT)
-                zmq_connect(this->_zmq_socket_ptr, ip_addr->c_str());
+            {
+                int rc = zmq_connect(this->_zmq_socket_ptr, ip_addr->c_str());
+                assert(rc==0);
+            }
             else
                 throw error_t();
         }

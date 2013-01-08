@@ -122,6 +122,9 @@ int main(int argc, char** argv) {
                 dbg_print(MAIN_PROC_NAME,"SIGINT interrupt received, killing node\n");
             else
                 fprintf(outstream, "\n!!!!!    KILL NODE COMMAND RECEIVED    !!!!!\n\n");
+            
+            ctrlpublisher->PubMsg(2,HEADER_CTRL,"KILL");
+            sleep(1);
             break;
         }
         
@@ -141,6 +144,8 @@ int main(int argc, char** argv) {
             }*/
     }
     //mysubber->~Subscriber();
+    void *status;
+    pthread_join(th_hndl_subber, &status);
     mycontext->~Context();
     return (EXIT_SUCCESS);
 }
@@ -153,14 +158,14 @@ void *th_subscriber (void * params)
     std::string msgmaster = HEADER_SERVER_INFO;
     std::string temp;
     struct parameters *myparams = (struct parameters *) params;
-    Zmqcpp::Subscriber *msgsubber = new Zmqcpp::Subscriber(myparams->zmqcont,&(myparams->ip), myparams->conntype);
+    /*Zmqcpp::Subscriber *msgsubber = new Zmqcpp::Subscriber(myparams->zmqcont,&(myparams->ip), myparams->conntype);
     for (std::list<std::string>::iterator it = myparams->topics.begin(); it != myparams->topics.end(); it++)
     {
         cout << "Subscribing to <" << *it <<">"<<std::endl;
         printf("Subscribing to: <%s>\n",it->c_str());
         msgsubber->SubscribeTopic(*it);
     }
-    Saetta_Server::Server_Info serverinfomsg;
+    Saetta_Server::Server_Info serverinfomsg;*/
     ss.str("");
     ss << THREAD_CONTROL_IPC;
     Zmqcpp::Subscriber *ctrlsubber = new Zmqcpp::Subscriber(myparams->zmqcont,THREAD_CONTROL_IPC, ZMQCPP_CONNECT);
@@ -169,7 +174,7 @@ void *th_subscriber (void * params)
     sleep(1);
     while(1)
     {
-        ss.str("");
+        /*ss.str("");
         msgtype.clear();
         ss << msgsubber->RecvMsg();
         msgtype = ss.str();
@@ -189,7 +194,7 @@ void *th_subscriber (void * params)
                 cout << "Updated" << std::endl;
                 myparams->callback(server_ip.c_str());
             }
-        }
+        }*/
         
         ss.str("");
         ss << ctrlsubber->RecvMsg();
@@ -201,7 +206,10 @@ void *th_subscriber (void * params)
             ss << "Control message: " << ctrlsubber->RecvMsg();
             temp.clear();
             temp.assign(ss.str());
-            myparams->callback(temp.c_str());
+            if (temp.compare("Control message: KILL")==0)
+                break;
+            else
+                myparams->callback(temp.c_str());
         }
         
         /*cout << "Time: " << serverinfomsg.time() << std::endl << std::endl;
@@ -222,6 +230,6 @@ void *th_subscriber (void * params)
 
 void server_location_callback(std::string ip)
 {
-    cout << "AAAAAAAAAA  Callback fired!  AAAAAAAAAA" << std::endl;
-    cout << "AAAAAAAAAA  New server address: " << ip.c_str() << "  AAAAAAAAAA" << std::endl;    
+    
+    cout << ip.c_str() <<  std::endl;    
 }
