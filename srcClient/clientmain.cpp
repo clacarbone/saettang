@@ -30,10 +30,9 @@
 #include <service.h>
 #include <saetta.pb.h>
 #include "cli_parser.h"
-#define MULTICAST_ADDRESS "239.192.1.1"
-#define MULTICAST_PORT 5678
+
 using namespace std;
-std::string _zmq_pub_skt_string;
+//std::string _zmq_sub_skt_string;
 
 
 void printscreen (std::string str)
@@ -58,8 +57,11 @@ int sum( int num, ... ) {
 }             
 
 struct parameters{
-    void * zmqobj;
+    Zmqcpp::Context * zmqcont;
     void (*callback) (std::string);
+    std::string ip;
+    int conntype;
+    std::list<std::string> topics;
 };
 
 void *th_subscriber (void * params);
@@ -69,6 +71,7 @@ void server_location_callback(std::string ip);
  */
 int main(int argc, char** argv) {
 
+    struct parameters myparams;
     struct arguments arguments;
     outstream = stdout;
     arguments.M_DEBUG=&MAIN_DEBUG;
@@ -86,18 +89,26 @@ int main(int argc, char** argv) {
     if (!get_iface_address(arguments.interf))
         return (EXIT_FAILURE);
     ss << "epgm://" << _local_ip_address << ";" << MULTICAST_ADDRESS << ":" << MULTICAST_PORT << std::endl;
-    _zmq_pub_skt_string = ss.str();
+    //_zmq_sub_skt_string = ss.str();
+    myparams.ip = ss.str();
         
-    Saetta_Server::Server_Info serverinfomsg;
+    //Saetta_Server::Server_Info serverinfomsg;
 
     Zmqcpp::Context* mycontext = new Zmqcpp::Context(1);
    
-    Zmqcpp::Subscriber *mysubber=new Zmqcpp::Subscriber(mycontext,_zmq_pub_skt_string.c_str(), ZMQCPP_CONNECT);
-    mysubber->SubscribeTopic("SERVER_INFO");
-    mysubber->setIdentityRnd();
-    struct parameters myparams;
-    myparams.zmqobj=(void*)mysubber;
+    //Zmqcpp::Subscriber *mysubber=new Zmqcpp::Subscriber(mycontext,_zmq_pub_skt_string.c_str(), ZMQCPP_CONNECT);
+    //mysubber->SubscribeTopic("SERVER_INFO");
+    //mysubber->setIdentityRnd();
+    
+    //Zmqcpp::Publisher *ctrlpublisher = new Zmqcpp::Publisher(mycontext, THREAD_CONTROL_IPC, ZMQCPP_BIND);
+    
+    ss.str("");
+    ss.str(HEADER_SERVER_INFO);
+    myparams.topics.insert(myparams.topics.end(),ss.str());
+    myparams.conntype = ZMQCPP_CONNECT;
+    myparams.zmqcont=mycontext;
     myparams.callback=&server_location_callback;
+    
     pthread_t th_hndl_subber;
     pthread_create(&th_hndl_subber, NULL, th_subscriber, (void *)&myparams);
     
@@ -112,6 +123,8 @@ int main(int argc, char** argv) {
             break;
         }
         
+        //ctrlpublisher->PubMsg(2,HEADER_CTRL,"test");
+        
         /*cout << mysubber.RecvMsg() << std::endl;
         serverinfomsg.ParseFromString(mysubber.RecvMsg());
         cout << "Address: " << serverinfomsg.address() << std::endl;
@@ -125,7 +138,7 @@ int main(int argc, char** argv) {
                 cout << "\t Status: " << serverinfomsg.known_clients(i).status() << std::endl;
             }*/
     }
-    mysubber->~Subscriber();
+    //mysubber->~Subscriber();
     mycontext->~Context();
     return (EXIT_SUCCESS);
 }
@@ -133,24 +146,29 @@ int main(int argc, char** argv) {
 void *th_subscriber (void * params)
 {
     struct parameters *myparams = (struct parameters *) params;
-    Zmqcpp::Subscriber *mysubber = (Zmqcpp::Subscriber*)(myparams->zmqobj);
+    Zmqcpp::Subscriber *msgsubber = new Zmqcpp::Subscriber(myparams->zmqcont,myparams->ip.c_str(), myparams->conntype);
+    for (std::list<std::string>::iterator it = myparams->topics.begin(); it != myparams->topics.end(); it++)
+        msgsubber->SubscribeTopic(*it);
     Saetta_Server::Server_Info serverinfomsg;
+    //Zmqcpp::Subscriber *ctrlsubber = new Zmqcpp::Subscriber(myparams->zmqcont,THREAD_CONTROL_IPC, ZMQCPP_CONNECT);
+    //ctrlsubber->SubscribeTopic(HEADER_CTRL);
     std::string server_ip;
     std::stringstream ss;
     std::string msgtype;
-    std::string msgmaster = "SERVER_INFO";
+    std::string msgmaster = HEADER_SERVER_INFO;
+    std::string temp;
     
     while(1)
     {
         ss.str("");
         msgtype.clear();
-        ss << mysubber->RecvMsg();
+        ss << msgsubber->RecvMsg();
         msgtype = ss.str();
         
         if (!msgtype.compare(msgmaster))
         {
             //cout << mysubber->RecvMsg() << std::endl;
-            serverinfomsg.ParseFromString(mysubber->RecvMsg());
+            serverinfomsg.ParseFromString(msgsubber->RecvMsg());
             //cout << "Address: " << serverinfomsg.address() << std::endl;
             if (strcmp(server_ip.c_str(),serverinfomsg.address().c_str()))
             {
@@ -163,6 +181,20 @@ void *th_subscriber (void * params)
                 myparams->callback(server_ip.c_str());
             }
         }
+        
+        /*ss.str("");
+        ss << ctrlsubber->RecvMsg();
+        msgtype.clear();
+        msgtype = ss.str();
+        if (!msgtype.compare(HEADER_CTRL))
+        {
+            ss.str("");            
+            ss << "Control message: " << ctrlsubber->RecvMsg();
+            temp.clear();
+            temp.assign(ss.str());
+            myparams->callback(temp.c_str());
+        }*/
+        
         /*cout << "Time: " << serverinfomsg.time() << std::endl << std::endl;
         if (serverinfomsg.known_clients_size()>0)
         {

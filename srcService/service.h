@@ -7,6 +7,7 @@
 
 #ifndef SERVICE_H
 #define	SERVICE_H
+#include <globals.h>
 #include <pthread.h>
 #include <cstdlib>
 #include <zmqcpp.h>
@@ -14,6 +15,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
+#include <list>
 std::string _local_ip_address;
 std::stringstream ss;
 

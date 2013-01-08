@@ -31,9 +31,7 @@
 #include <service.h>
 #include <saetta.pb.h>
 #include "cli_parser.h"
-#define MULTICAST_ADDRESS "239.192.1.1"
-#define MULTICAST_PORT 5678
-#define ROUTER_PORT 5679
+
 using namespace std;
 std::string _zmq_pub_skt_string;
 std::string _zmq_rou_skt_string;
