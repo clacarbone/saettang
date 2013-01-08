@@ -8,7 +8,7 @@ IF (BUILD_ZMQCPP)
 ELSE (BUILD_ZMQCPP)
     MESSAGE (STATUS "Disabled by user. Use ccmake to enable.")
 ENDIF (BUILD_ZMQCPP)
-MESSAGE (STATUS "=============================")
+#MESSAGE (STATUS "=============================")
 
 
 
