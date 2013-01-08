@@ -39,7 +39,8 @@ namespace Zmqcpp
     {
         public:
             Socket(Context* context, int skt_type);
-            Socket(Context* context, int skt_type, std::string ip_str, int conn);
+            Socket(Context* context, int skt_type, std::string* ip_str, int conn);
+            Socket(Context* context, int skt_type, const char* ip_addr, int conn);
             virtual ~Socket();
             Socket* getPtr();
             int getsockopt (void *socket, int option_name, void *option_value, size_t *option_len);
@@ -74,7 +75,8 @@ namespace Zmqcpp
         
         public:
             Publisher(Context* context);
-            Publisher(Context* context, std::string ip_str, int conn);
+            Publisher(Context* context, std::string* ip_str, int conn);
+            Publisher(Context* context, const char * ip_str, int conn);
             virtual ~Publisher();
             void PubMsg(int count, ...);
         
@@ -86,7 +88,8 @@ namespace Zmqcpp
     {
         public:
             Subscriber(Context* context);
-            Subscriber(Context* context, std::string ip_str, int conn);
+            Subscriber(Context* context, std::string* ip_str, int conn);
+            Subscriber(Context* context, const char * ip_str, int conn);
             virtual ~Subscriber();
             int SubscribeTopic(std::string topic);
             std::string RecvMsg();
@@ -97,7 +100,8 @@ namespace Zmqcpp
     {
         public:
             Request(Context* context);
-            Request(Context* context, std::string ip_str, int conn);
+            Request(Context* context, std::string* ip_str, int conn);
+            Request(Context* context, const char * ip_str, int conn);
             virtual ~Request();            
             void SendMsg(int count, ...);
             std::string RecvMsg();
@@ -108,7 +112,8 @@ namespace Zmqcpp
     {
         public:
             Reply(Context* context);
-            Reply(Context* context, std::string ip_str, int conn);
+            Reply(Context* context, std::string* ip_str, int conn);
+            Reply(Context* context, const char * ip_str, int conn);
             virtual ~Reply();
             void SendMsg(int count, ...);
             std::string RecvMsg();            
@@ -118,7 +123,8 @@ namespace Zmqcpp
     {
         public:
             Router(Context* context);
-            Router(Context* context, std::string ip_str, int conn);
+            Router(Context* context, std::string* ip_str, int conn);
+            Router(Context* context, const char * ip_str, int conn);
             virtual ~Router();
             void SendMsg(int count, ...);
             std::string RecvMsg();            

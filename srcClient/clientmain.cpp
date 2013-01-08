@@ -100,14 +100,16 @@ int main(int argc, char** argv) {
     //mysubber->SubscribeTopic("SERVER_INFO");
     //mysubber->setIdentityRnd();
     
-    //Zmqcpp::Publisher *ctrlpublisher = new Zmqcpp::Publisher(mycontext, THREAD_CONTROL_IPC, ZMQCPP_BIND);
-    
     ss.str("");
     ss.str(HEADER_SERVER_INFO);
     myparams.topics.insert(myparams.topics.end(),ss.str());
     myparams.conntype = ZMQCPP_CONNECT;
     myparams.zmqcont=mycontext;
     myparams.callback=&server_location_callback;
+    
+    ss.str("");
+    ss << THREAD_CONTROL_IPC;
+    Zmqcpp::Publisher *ctrlpublisher = new Zmqcpp::Publisher(mycontext, THREAD_CONTROL_IPC, ZMQCPP_BIND);
     
     pthread_t th_hndl_subber;
     pthread_create(&th_hndl_subber, NULL, th_subscriber, (void *)&myparams);
@@ -123,8 +125,8 @@ int main(int argc, char** argv) {
             break;
         }
         
-        //ctrlpublisher->PubMsg(2,HEADER_CTRL,"test");
-        
+        ctrlpublisher->PubMsg(2,HEADER_CTRL,"Test");
+        sleep(1);
         /*cout << mysubber.RecvMsg() << std::endl;
         serverinfomsg.ParseFromString(mysubber.RecvMsg());
         cout << "Address: " << serverinfomsg.address() << std::endl;
@@ -145,19 +147,26 @@ int main(int argc, char** argv) {
 
 void *th_subscriber (void * params)
 {
-    struct parameters *myparams = (struct parameters *) params;
-    Zmqcpp::Subscriber *msgsubber = new Zmqcpp::Subscriber(myparams->zmqcont,myparams->ip.c_str(), myparams->conntype);
-    for (std::list<std::string>::iterator it = myparams->topics.begin(); it != myparams->topics.end(); it++)
-        msgsubber->SubscribeTopic(*it);
-    Saetta_Server::Server_Info serverinfomsg;
-    //Zmqcpp::Subscriber *ctrlsubber = new Zmqcpp::Subscriber(myparams->zmqcont,THREAD_CONTROL_IPC, ZMQCPP_CONNECT);
-    //ctrlsubber->SubscribeTopic(HEADER_CTRL);
     std::string server_ip;
     std::stringstream ss;
     std::string msgtype;
     std::string msgmaster = HEADER_SERVER_INFO;
     std::string temp;
+    struct parameters *myparams = (struct parameters *) params;
+    Zmqcpp::Subscriber *msgsubber = new Zmqcpp::Subscriber(myparams->zmqcont,&(myparams->ip), myparams->conntype);
+    for (std::list<std::string>::iterator it = myparams->topics.begin(); it != myparams->topics.end(); it++)
+    {
+        cout << "Subscribing to <" << *it <<">"<<std::endl;
+        printf("Subscribing to: <%s>\n",it->c_str());
+        msgsubber->SubscribeTopic(*it);
+    }
+    Saetta_Server::Server_Info serverinfomsg;
+    ss.str("");
+    ss << THREAD_CONTROL_IPC;
+    Zmqcpp::Subscriber *ctrlsubber = new Zmqcpp::Subscriber(myparams->zmqcont,THREAD_CONTROL_IPC, ZMQCPP_CONNECT);
+    ctrlsubber->SubscribeTopic(HEADER_CTRL);
     
+    sleep(1);
     while(1)
     {
         ss.str("");
@@ -182,7 +191,7 @@ void *th_subscriber (void * params)
             }
         }
         
-        /*ss.str("");
+        ss.str("");
         ss << ctrlsubber->RecvMsg();
         msgtype.clear();
         msgtype = ss.str();
@@ -193,7 +202,7 @@ void *th_subscriber (void * params)
             temp.clear();
             temp.assign(ss.str());
             myparams->callback(temp.c_str());
-        }*/
+        }
         
         /*cout << "Time: " << serverinfomsg.time() << std::endl << std::endl;
         if (serverinfomsg.known_clients_size()>0)

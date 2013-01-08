@@ -47,7 +47,7 @@ extern "C" {
 #include <unistd.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <globals.h>
 FILE *outstream;
 //#include <fcntl.h>>
 #include <stdarg.h>
