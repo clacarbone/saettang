@@ -32,29 +32,7 @@
 #include "cli_parser.h"
 
 using namespace std;
-//std::string _zmq_sub_skt_string;
-
-
-void printscreen (std::string str)
-{
-    if (str.compare("we would like to see"))
-        cout << "Evviva!";
-}
-
-int sum( int num, ... ) {
-  int answer = 0;
-  va_list argptr;            
- 
-  va_start( argptr, num );            
- 
-  for( ; num > 0; num-- ) {
-    answer += va_arg( argptr, int );
-  }           
- 
-  va_end( argptr );           
- 
-  return( answer );
-}             
+//std::string _zmq_sub_skt_string;     
 
 struct parameters{
     Zmqcpp::Context * zmqcont;
@@ -71,6 +49,7 @@ void server_location_callback(std::string ip);
  */
 int main(int argc, char** argv) {
 
+    int th_control = 1;
     struct parameters myparams;
     struct arguments arguments;
     outstream = stdout;
@@ -88,7 +67,7 @@ int main(int argc, char** argv) {
     fprintf(outstream, "Requested interface %s, attempting to fetch address...\n",arguments.interf);
     if (!get_iface_address(arguments.interf))
         return (EXIT_FAILURE);
-    ss << "epgm://" << _local_ip_address << ";" << MULTICAST_ADDRESS << ":" << MULTICAST_PORT << std::endl;
+    ss << "epgm://" << _local_ip_address << ";" << MULTICAST_ADDRESS << ":" << MULTICAST_PORT;// << std::endl;
     //_zmq_sub_skt_string = ss.str();
     myparams.ip = ss.str();
         
@@ -96,7 +75,7 @@ int main(int argc, char** argv) {
 
     Zmqcpp::Context* mycontext = new Zmqcpp::Context(1);
    
-    //Zmqcpp::Subscriber *mysubber=new Zmqcpp::Subscriber(mycontext,_zmq_pub_skt_string.c_str(), ZMQCPP_CONNECT);
+    //Zmqcpp::Subscriber *mysubber=new Zmqcpp::Subscriber(mycontext,_zmq_sub_skt_string.c_str(), ZMQCPP_CONNECT);
     //mysubber->SubscribeTopic("SERVER_INFO");
     //mysubber->setIdentityRnd();
     
@@ -114,7 +93,7 @@ int main(int argc, char** argv) {
     pthread_t th_hndl_subber;
     pthread_create(&th_hndl_subber, NULL, th_subscriber, (void *)&myparams);
     
-    while(1)
+    while(th_control)
     {
         if (s_interrupted == 1) {
             fprintf(outstream, "\n");
@@ -125,13 +104,13 @@ int main(int argc, char** argv) {
             
             ctrlpublisher->PubMsg(2,HEADER_CTRL,"KILL");
             sleep(1);
-            break;
+            th_control = 0;
         }
         
         ctrlpublisher->PubMsg(2,HEADER_CTRL,"Test");
         sleep(1);
-        /*cout << mysubber.RecvMsg() << std::endl;
-        serverinfomsg.ParseFromString(mysubber.RecvMsg());
+        /*cout << mysubber->RecvMsg() << std::endl;
+        serverinfomsg.ParseFromString(mysubber->RecvMsg());
         cout << "Address: " << serverinfomsg.address() << std::endl;
         cout << "Time: " << serverinfomsg.time() << std::endl << std::endl;
         if (serverinfomsg.known_clients_size()>0)
@@ -144,6 +123,7 @@ int main(int argc, char** argv) {
             }*/
     }
     //mysubber->~Subscriber();
+    ctrlpublisher->~Publisher();
     void *status;
     pthread_join(th_hndl_subber, &status);
     mycontext->~Context();
@@ -152,65 +132,93 @@ int main(int argc, char** argv) {
 
 void *th_subscriber (void * params)
 {
+    int th_control = 1;
     std::string server_ip;
     std::stringstream ss;
     std::string msgtype;
     std::string msgmaster = HEADER_SERVER_INFO;
     std::string temp;
     struct parameters *myparams = (struct parameters *) params;
-    /*Zmqcpp::Subscriber *msgsubber = new Zmqcpp::Subscriber(myparams->zmqcont,&(myparams->ip), myparams->conntype);
+    Zmqcpp::Subscriber *msgsubber = new Zmqcpp::Subscriber(myparams->zmqcont,&(myparams->ip), myparams->conntype);
     for (std::list<std::string>::iterator it = myparams->topics.begin(); it != myparams->topics.end(); it++)
     {
         cout << "Subscribing to <" << *it <<">"<<std::endl;
         printf("Subscribing to: <%s>\n",it->c_str());
         msgsubber->SubscribeTopic(*it);
     }
-    Saetta_Server::Server_Info serverinfomsg;*/
+    Saetta_Server::Server_Info serverinfomsg;
     ss.str("");
     ss << THREAD_CONTROL_IPC;
     Zmqcpp::Subscriber *ctrlsubber = new Zmqcpp::Subscriber(myparams->zmqcont,THREAD_CONTROL_IPC, ZMQCPP_CONNECT);
     ctrlsubber->SubscribeTopic(HEADER_CTRL);
+    Zmqcpp::Poller *mypoller = new Zmqcpp::Poller();
+    Zmqcpp::PollItem* mypollitems = new Zmqcpp::PollItem();
+    
+    mypollitems->addevent(msgsubber,ZMQ_POLLIN,0);
+    mypollitems->addevent(ctrlsubber,ZMQ_POLLIN,0);
     
     sleep(1);
-    while(1)
+    while(th_control)
     {
-        /*ss.str("");
-        msgtype.clear();
-        ss << msgsubber->RecvMsg();
-        msgtype = ss.str();
-        
-        if (!msgtype.compare(msgmaster))
+        usleep(100000);
+        int rc = mypoller->PollEvents(mypollitems,100);
+
+        if (rc > 0)
         {
-            //cout << mysubber->RecvMsg() << std::endl;
-            serverinfomsg.ParseFromString(msgsubber->RecvMsg());
-            //cout << "Address: " << serverinfomsg.address() << std::endl;
-            if (strcmp(server_ip.c_str(),serverinfomsg.address().c_str()))
+            if(mypollitems->item(0)->revents!= 0)
             {
-                ss.str("");
-                server_ip.clear();
-                ss << serverinfomsg.address();
-                server_ip.assign(ss.str());
-                ss.str("");
-                cout << "Updated" << std::endl;
-                myparams->callback(server_ip.c_str());
+                while(mypoller->PollEvents(mypollitems, 0, 100)>0)
+                {
+                    ss.str("");
+                    msgtype.clear();
+                    ss << msgsubber->RecvMsg();
+                    msgtype = ss.str();
+
+                    if (!msgtype.compare(msgmaster))
+                    {
+                        //cout << mysubber->RecvMsg() << std::endl;
+                        serverinfomsg.ParseFromString(msgsubber->RecvMsg());
+                        //cout << "Address: " << serverinfomsg.address() << std::endl;
+                        if (strcmp(server_ip.c_str(),serverinfomsg.address().c_str()))
+                        {
+                            ss.str("");
+                            server_ip.clear();
+                            ss << serverinfomsg.address();
+                            server_ip.assign(ss.str());
+                            ss.str("");
+                            cout << "Updated" << std::endl;
+                            myparams->callback(server_ip.c_str());
+                        }
+                    }
+                }
             }
-        }*/
-        
-        ss.str("");
-        ss << ctrlsubber->RecvMsg();
-        msgtype.clear();
-        msgtype = ss.str();
-        if (!msgtype.compare(HEADER_CTRL))
-        {
-            ss.str("");            
-            ss << "Control message: " << ctrlsubber->RecvMsg();
-            temp.clear();
-            temp.assign(ss.str());
-            if (temp.compare("Control message: KILL")==0)
-                break;
-            else
-                myparams->callback(temp.c_str());
+            if(mypollitems->item(1)->revents!= 0)
+            {
+                while(mypoller->PollEvents(mypollitems, 1, 100)>0)
+                {
+                    ss.str("");
+                    ss << ctrlsubber->RecvMsg();
+                    msgtype.clear();
+                    msgtype = ss.str();
+                    if (!msgtype.compare(HEADER_CTRL))
+                    {
+                        ss.str("");            
+                        ss << "Control message: " << ctrlsubber->RecvMsg();
+                        temp.clear();
+                        temp.assign(ss.str());
+                        myparams->callback(temp.c_str());
+                        if (temp.compare("Control message: KILL")==0)
+                            th_control = 0;
+                        
+                    }
+                }
+            }
         }
+    }
+    
+        
+        
+        
         
         /*cout << "Time: " << serverinfomsg.time() << std::endl << std::endl;
         if (serverinfomsg.known_clients_size()>0)
@@ -223,7 +231,9 @@ void *th_subscriber (void * params)
                 cout << "\t Status: " << serverinfomsg.known_clients(i).status() << std::endl;
             }
         }*/
-    }
+    
+    ctrlsubber->~Subscriber();
+    msgsubber->~Subscriber();
     return(EXIT_SUCCESS);
     
 }
