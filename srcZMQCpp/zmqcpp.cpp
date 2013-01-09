@@ -36,6 +36,7 @@ namespace Zmqcpp {
     Context::Context()
     {
         this->_zmq_context_ptr = zmq_init(1);
+        
         if (this->_zmq_context_ptr == NULL)
             throw error_t ();      
     }
@@ -73,12 +74,12 @@ namespace Zmqcpp {
         if (this->_zmq_socket_ptr == NULL)
             throw error_t ();
         if (conn == ZMQCPP_BIND)        
-            zmq_bind(this->_zmq_socket_ptr, ip_addr->c_str());
+            zmq_bind(this->_zmq_socket_ptr, (const char*)ip_addr->c_str());
         else
         {
             if (conn == ZMQCPP_CONNECT)
             {
-                int rc = zmq_connect(this->_zmq_socket_ptr, ip_addr->c_str());
+                int rc = zmq_connect(this->_zmq_socket_ptr, (const char*)ip_addr->c_str());
                 assert(rc==0);
             }
             else
@@ -412,5 +413,90 @@ namespace Zmqcpp {
     std::string Router::RecvMsg()
     {        
         return this->_socket->Receive();
+    }
+    
+    PollItem::PollItem()
+    {
+        this->_items=0;
+    }
+    
+    PollItem::~PollItem()
+    {
+        
+    }
+    
+    void PollItem::addevent(Publisher* service, short events, short revents)
+    {
+        PollItem::setpollitem(service->_socket, events, revents);
+    }
+    
+    void PollItem::addevent(Subscriber* service, short events, short revents)
+    {
+        PollItem::setpollitem(service->_socket, events, revents);
+    }
+            
+    void PollItem::addevent(Request* service, short events, short revents)
+    {
+        PollItem::setpollitem(service->_socket, events, revents);
+    }
+            
+    void PollItem::addevent(Reply* service, short events, short revents)
+    {
+        PollItem::setpollitem(service->_socket, events, revents);
+    }
+            
+    void PollItem::addevent(Router* service, short events, short revents)
+    {
+        PollItem::setpollitem(service->_socket, events, revents);
+    }
+    
+    void PollItem::setpollitem (Zmqcpp::Socket* socket, short events, short revents)
+    {
+        /*if (this->_items == 0)
+        {
+            zmq_pollitem_t * new_item = malloc(sizeof(zmq_pollitem_t));
+            new_item.socket = (void*) socket;
+            new_item.events = events;
+            new_item.revents = revents;
+            this->_itemptr = &new_item;
+        }
+        else
+        {*/
+            this->_items ++;
+            this->_itemptr = (zmq_pollitem_t *) realloc (this->_itemptr, this->_items * sizeof(zmq_pollitem_t));
+            this->_itemptr[this->_items-1].socket = (void*) socket->_zmq_socket_ptr;
+            this->_itemptr[this->_items-1].events = events;
+            this->_itemptr[this->_items-1].revents = revents;
+        //}
+    }
+    int PollItem::length()
+    {
+        return this->_items;
+        
+    }
+    
+    zmq_pollitem_t* PollItem::item(int index)
+    {
+        return &(this->_itemptr[index]);
+    }
+    
+    Poller::Poller()
+    {
+        
+    }
+    
+    Poller::~Poller()
+    {
+        
+    }
+    
+    int Poller::PollEvents(Zmqcpp::PollItem* items, long timeout)
+    {
+        return zmq_poll(items->_itemptr,items->_items,timeout);
+    }
+    
+    int Poller::PollEvents(Zmqcpp::PollItem* items, int element, long timeout)
+    {
+        return zmq_poll(&(items->_itemptr[element]),1,timeout);
     }
 }

@@ -54,6 +54,7 @@ namespace Zmqcpp
             char* Receive();
             
         protected:
+            friend class PollItem;
             void *_zmq_socket_ptr;
             std::string _ip_addr;
     };
@@ -68,6 +69,7 @@ namespace Zmqcpp
         protected:
             Zmqcpp::Context* _zmq_context;
             Zmqcpp::Socket* _socket;
+            friend class PollItem;
     };
     
     class Publisher: public generic
@@ -128,6 +130,35 @@ namespace Zmqcpp
             virtual ~Router();
             void SendMsg(int count, ...);
             std::string RecvMsg();            
+    };
+    
+    class PollItem
+    {
+        public:
+            PollItem();
+            virtual ~PollItem();
+            void addevent(Publisher* service, short events, short revents);
+            void addevent(Subscriber* service, short events, short revents);
+            void addevent(Request* service, short events, short revents);
+            void addevent(Reply* service, short events, short revents);
+            void addevent(Router* service, short events, short revents);
+            int length();
+            zmq_pollitem_t* item(int index);
+            
+        private:
+            friend class Poller;
+            void setpollitem (Zmqcpp::Socket* socket, short events, short revents);
+            int _items;
+            zmq_pollitem_t * _itemptr;
+    };
+    
+    class Poller
+    {
+        public: 
+            Poller();
+            virtual ~Poller();
+            int PollEvents(Zmqcpp::PollItem* items, long timeout);
+            int PollEvents(Zmqcpp::PollItem* items, int element, long timeout);
     };
 
 }
