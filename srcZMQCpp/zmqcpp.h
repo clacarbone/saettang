@@ -11,6 +11,7 @@ extern "C" {
     #include <zmq.h>
     #include <zhelpers.h>
 }
+#include <zmq.hpp>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -21,11 +22,47 @@ namespace Zmqcpp
 {
 
   
+    class NewContext
+    {
+        public:
+            NewContext();
+            virtual ~NewContext();
+            zmq::context_t * getPtr();
+        protected:
+            friend class NewSocket;
+            zmq::context_t * _zmq_context_ptr;
+        
+    };
+    
+    class NewSocket
+    {
+        public:
+            NewSocket(Context* context, int skt_type);
+            NewSocket(Context* context, int skt_type, std::string* ip_str, int conn);
+            NewSocket(Context* context, int skt_type, const char* ip_addr, int conn);
+            virtual ~NewSocket();
+            Socket* getPtr();
+            int getsockopt (void *socket, int option_name, void *option_value, size_t *option_len);
+            int setsockopt(int option, const void *optval,size_t optvallen);
+            int connect();
+            int connect(std::string ip_addr);
+            int bind();
+            int bind(std::string ip_addr);
+            int SendMore(std::string msg);
+            int Send(std::string msg);
+            char* Receive();
+            
+        protected:
+            friend class PollItem;
+            zmq::socket_t * _zmq_socket_ptr;
+            std::string _ip_addr;
+    };
+    
     class Context
     {
         public:
             Context();
-            Context(int threads);
+            //Context(int threads);
             virtual ~Context();
             Context* getPtr();
             

@@ -30,19 +30,25 @@
 #include <service.h>
 #include <saetta.pb.h>
 #include "cli_parser.h"
-
+#include <thread>
+#include <zmq.hpp>
 using namespace std;
 //std::string _zmq_sub_skt_string;     
 
 struct parameters{
     Zmqcpp::Context * zmqcont;
     void (*callback) (std::string);
-    std::string ip;
+    string ip;
     int conntype;
-    std::list<std::string> topics;
+    list<std::string> topics;
 };
 
-void *th_subscriber (void * params);
+struct parameters myparams, *paramsptr;
+struct arguments arguments;
+    
+
+int initialization (int argc, char** argv);
+void *th_subscriber (parameters * params);
 void server_location_callback(std::string ip);
 /*
  * 
@@ -50,48 +56,28 @@ void server_location_callback(std::string ip);
 int main(int argc, char** argv) {
 
     int th_control = 1;
-    struct parameters myparams;
-    struct arguments arguments;
-    outstream = stdout;
-    arguments.M_DEBUG=&MAIN_DEBUG;
-    arguments.Z_DEBUG=&ZMQ_DEBUG;
-    strcpy( arguments.interf, "eth0" );
-    strcpy(arguments.outfile, "");
-    s_catch_signals();
-
-    argp_parse(&argp, argc, argv, ARGP_NO_ERRS, 0, &arguments);
-
-    if (strlen(arguments.outfile)>0)
-        outstream = fopen (arguments.outfile, "w");
-
-    fprintf(outstream, "Requested interface %s, attempting to fetch address...\n",arguments.interf);
-    if (!get_iface_address(arguments.interf))
+    if (initialization(argc, argv) == EXIT_FAILURE)
         return (EXIT_FAILURE);
-    ss << "epgm://" << _local_ip_address << ";" << MULTICAST_ADDRESS << ":" << MULTICAST_PORT;// << std::endl;
-    //_zmq_sub_skt_string = ss.str();
-    myparams.ip = ss.str();
+
+    zmq::context_t * _newcont = new zmq::context_t();
         
     //Saetta_Server::Server_Info serverinfomsg;
 
-    Zmqcpp::Context* mycontext = new Zmqcpp::Context(1);
-   
+    Zmqcpp::Context* mycontext = new Zmqcpp::Context();
+    myparams.zmqcont=mycontext;
     //Zmqcpp::Subscriber *mysubber=new Zmqcpp::Subscriber(mycontext,_zmq_sub_skt_string.c_str(), ZMQCPP_CONNECT);
     //mysubber->SubscribeTopic("SERVER_INFO");
     //mysubber->setIdentityRnd();
     
-    ss.str("");
-    ss.str(HEADER_SERVER_INFO);
-    myparams.topics.insert(myparams.topics.end(),ss.str());
-    myparams.conntype = ZMQCPP_CONNECT;
-    myparams.zmqcont=mycontext;
-    myparams.callback=&server_location_callback;
+    
     
     ss.str("");
     ss << THREAD_CONTROL_IPC;
     Zmqcpp::Publisher *ctrlpublisher = new Zmqcpp::Publisher(mycontext, THREAD_CONTROL_IPC, ZMQCPP_BIND);
     
-    pthread_t th_hndl_subber;
-    pthread_create(&th_hndl_subber, NULL, th_subscriber, (void *)&myparams);
+    //pthread_t th_hndl_subber;
+    //pthread_create(&th_hndl_subber, NULL, th_subscriber, (void *)paramsptr);
+    thread controlth(th_subscriber,&myparams);
     
     while(th_control)
     {
@@ -124,13 +110,14 @@ int main(int argc, char** argv) {
     }
     //mysubber->~Subscriber();
     ctrlpublisher->~Publisher();
-    void *status;
-    pthread_join(th_hndl_subber, &status);
+    //void *status;
+    controlth.join();
+    //pthread_join(th_hndl_subber, &status);
     mycontext->~Context();
     return (EXIT_SUCCESS);
 }
 
-void *th_subscriber (void * params)
+void *th_subscriber (parameters * params)
 {
     int th_control = 1;
     std::string server_ip;
@@ -242,4 +229,33 @@ void server_location_callback(std::string ip)
 {
     
     cout << ip.c_str() <<  std::endl;    
+}
+
+int initialization (int argc, char** argv)
+{
+        outstream = stdout;
+    arguments.M_DEBUG=&MAIN_DEBUG;
+    arguments.Z_DEBUG=&ZMQ_DEBUG;
+    strcpy( arguments.interf, "eth0" );
+    strcpy(arguments.outfile, "");
+    s_catch_signals();
+
+    argp_parse(&argp, argc, argv, ARGP_NO_ERRS, 0, &arguments);
+
+    if (strlen(arguments.outfile)>0)
+        outstream = fopen (arguments.outfile, "w");
+
+    fprintf(outstream, "Requested interface %s, attempting to fetch address...\n",arguments.interf);
+    if (!get_iface_address(arguments.interf))
+        return (EXIT_FAILURE);
+    ss << "epgm://" << _local_ip_address << ";" << MULTICAST_ADDRESS << ":" << MULTICAST_PORT;// << std::endl;
+    //_zmq_sub_skt_string = ss.str();
+    myparams.ip = ss.str();
+    ss.str("");
+    ss.str(HEADER_SERVER_INFO);
+    myparams.topics.insert(myparams.topics.end(),ss.str());
+    myparams.conntype = ZMQCPP_CONNECT;
+    myparams.callback=&server_location_callback;
+    paramsptr = &myparams;
+    return(EXIT_SUCCESS);
 }

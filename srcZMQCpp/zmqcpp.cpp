@@ -32,21 +32,48 @@
 #include "zmqcpp.h"
 namespace Zmqcpp {
 
+    NewContext::NewContext()
+    {
+        this->_zmq_context_ptr = new zmq::context_t();
+    }
+    NewContext::~NewContext()
+    {
+        this->_zmq_context_ptr->close();
+    }
+    NewContext::getPtr()
+    {
+        return this;
+    }
+    
+    NewSocket::NewSocket(Context* context, int skt_type)
+    {
+        
+    }
+    
+    NewSocket::NewSocket(Context* context, int skt_type, std::string* ip_str, int conn)
+    {
+        
+    }
+    
+    NewSocket::NewSocket(Context* context, int skt_type, const char* ip_addr, int conn)
+    {
+        
+    }
     
     Context::Context()
     {
-        this->_zmq_context_ptr = zmq_init(1);
+        this->_zmq_context_ptr = zmq_ctx_new();
         
         if (this->_zmq_context_ptr == NULL)
             throw error_t ();      
     }
     
-    Context::Context(int threads)
+    /*Context::Context(int threads)
     {
         this->_zmq_context_ptr = zmq_init(threads);
         if (this->_zmq_context_ptr == NULL)
             throw error_t ();           
-    }
+    }*/
     
     Context::~Context()
     {
