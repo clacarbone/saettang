@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     if (initialization(argc, argv) == EXIT_FAILURE)
         return (EXIT_FAILURE);
 
-    zmq::context_t * _newcont = new zmq::context_t();
+    //zmq::context_t * _newcont = new zmq::context_t();
         
     //Saetta_Server::Server_Info serverinfomsg;
 

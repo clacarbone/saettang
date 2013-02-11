@@ -29,7 +29,7 @@ MESSAGE ("     ${PROJECT_NAME} version ${SAETTAZMQ_VERSION}")
 # Set where to find our internal CMake scripts
 SET (SAETTANG_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake CACHE PATH "Location of CMake scripts")
 SET (CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-Wall -fpermissive")
-SET (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Wall -fpermissive")
+SET (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Wall -fpermissive -std=c++0x")
 SET (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/../CMakeModules ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 #set paths

@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     ss << "epgm://" << _local_ip_address << ";" << MULTICAST_ADDRESS << ":" << MULTICAST_PORT << std::endl;
     _zmq_pub_skt_string = ss.str();
  
-    Zmqcpp::Context* mycontext = new Zmqcpp::Context(1);
+    Zmqcpp::Context* mycontext = new Zmqcpp::Context();
 
     Zmqcpp::Publisher mypubber(mycontext, _zmq_pub_skt_string.c_str(), ZMQCPP_BIND);
     ss.str("");
